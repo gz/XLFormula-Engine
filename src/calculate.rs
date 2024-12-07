@@ -1243,6 +1243,7 @@ fn show_error(error: types::Error) -> String {
         types::Error::Value => String::from("#VALUE!"),
         types::Error::Argument => String::from("#ARG!"),
         types::Error::Reference => String::from("#REF!"),
+        types::Error::TooManyReferences => String::from("#TOOMANYREFS!"),
     }
 }
 

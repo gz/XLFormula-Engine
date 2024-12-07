@@ -74,14 +74,16 @@ boolean = _{ t | f }
     t    = { ( "T" | "t") ~ ( "R" | "r") ~ ( "U" | "u") ~ ( "E" | "e") }
     f    = { ( "F" | "f") ~ ( "A" | "a") ~ ( "L" | "l") ~ ( "S" | "s") ~ ( "E" | "e") }
 
-reference = @{ (ASCII_ALPHA | "_" | "\\") ~ char_reference* }  
+reference = @{ (ASCII_ALPHA | "_" | "\\") ~ char_reference* }
+reference_range = { reference ~ ":" ~ reference }
+
 char_reference = { ASCII_ALPHANUMERIC | "." | "_" } 
 
 iterator = { "{" ~ expr ~ ("," ~ expr)*? ~ "}" }
 
 expr = { term ~ (operator ~ term)* }
 term = _{ number | "(" ~ expr ~ ")" | string_double_quote 
-        | string_single_quote | logical_function | function  | boolean | reference | iterator } 
+        | string_single_quote | logical_function | function  | boolean | reference_range | reference | iterator }
 term_constant = _{ string_constant }
 
 formula = _{ SOI ~ "=" ~ expr ~ EOI | SOI ~ term_constant ~ EOI } 

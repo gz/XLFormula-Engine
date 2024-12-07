@@ -569,6 +569,29 @@ fn it_evaluate_references_other_formulas() {
 }
 
 #[test]
+fn it_evaluate_references_lists() {
+    let data_function = |s: String| match s.as_str() {
+        "A0" => types::Value::Number(1.0),
+        "B0" => types::Value::Number(2.0),
+        "C0" => types::Value::Number(3.0),
+        _ => types::Value::Number(1.0),
+    };
+
+    assert_eq!(
+        evaluate_formula_number_with_reference(&"=SUM(A0:C0)", Some(&data_function)),
+        6.0
+    );
+    assert_eq!(
+        evaluate_formula_number_with_reference(&"=SUM(A10:C20)", Some(&data_function)),
+        33.0
+    );
+    assert_eq!(
+        evaluate_formula_string_with_reference(&"=SUM(A0:C1000)", Some(&data_function)),
+        "#TOOMANYREFS!"
+    );
+}
+
+#[test]
 fn it_evaluate_references_boolean_formulas() {
     let data_function = |s: String| match s.as_str() {
         "A" => types::Value::Boolean(types::Boolean::True),

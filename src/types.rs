@@ -45,6 +45,7 @@ pub enum Error {
     Value,
     Argument,
     Reference,
+    TooManyReferences,
 }
 
 /// Defines boolean types.

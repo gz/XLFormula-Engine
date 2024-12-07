@@ -101,6 +101,63 @@ fn build_formula_reference(pair: pest::iterators::Pair<Rule>) -> types::Formula 
     types::Formula::Reference(string)
 }
 
+fn build_formula_reference_iterator(pair: pest::iterators::Pair<Rule>) -> types::Formula {
+    let mut pairs = pair.into_inner();
+    let first = pairs.next().unwrap();
+    let second = pairs.next().unwrap();
+
+    let start = parse_reference(first.as_str());
+    let end = parse_reference(second.as_str());
+
+    // Expand the references into the range
+    let mut expanded_references = Vec::new();
+    for row in start.row..=end.row {
+        for col in start.col..=end.col {
+            expanded_references.push(types::Formula::Reference(format_reference(row, col)));
+            if expanded_references.len() > 1000 {
+                return types::Formula::Value(types::Value::Error(types::Error::TooManyReferences));
+            }
+        }
+    }
+
+    types::Formula::Iterator(expanded_references)
+}
+
+// Struct to store parsed references
+struct Reference {
+    col: usize,
+    row: usize,
+}
+
+// Helper function to parse references like "A0", "B1" into (row, col)
+fn parse_reference(reference: &str) -> Reference {
+    let col = reference.chars().take_while(|c| c.is_alphabetic()).collect::<String>();
+    let row = reference.chars().skip_while(|c| c.is_alphabetic()).collect::<String>();
+
+    Reference {
+        col: col_to_index(&col),
+        row: row.parse::<usize>().unwrap(),
+    }
+}
+
+// Helper function to convert a column like "A" or "C" to a zero-based index
+fn col_to_index(col: &str) -> usize {
+    col.chars()
+        .fold(0, |acc, c| acc * 26 + (c as usize - 'A' as usize + 1)) - 1
+}
+
+// Helper function to format the reference back to "A0" or "C1"
+fn format_reference(row: usize, col: usize) -> String {
+    let mut column = String::new();
+    let mut c = col + 1;
+    while c > 0 {
+        c -= 1;
+        column.insert(0, (c % 26 + 'A' as usize) as u8 as char);
+        c /= 26;
+    }
+    format!("{}{}", column, row)
+}
+
 fn build_formula_iterator(
     pair: pest::iterators::Pair<Rule>,
     f: Option<&impl Fn(String, Vec<f32>) -> types::Value>,
@@ -334,6 +391,7 @@ fn build_formula_with_climber(
             Rule::xor => build_formula_collective_operator(Rule::xor, pair, f),
             Rule::not => build_formula_unary_operator(Rule::not, pair, f),
             Rule::reference => build_formula_reference(pair),
+            Rule::reference_range => build_formula_reference_iterator(pair),
             Rule::iterator => build_formula_iterator(pair, f),
             Rule::negate => build_formula_unary_operator(Rule::negate, pair, f),
             Rule::expr => build_formula_with_climber(pair.into_inner(), f),
