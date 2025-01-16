@@ -136,7 +136,7 @@ fn parse_reference(reference: &str) -> Reference {
 
     Reference {
         col: col_to_index(&col),
-        row: row.parse::<usize>().unwrap(),
+        row: row.parse::<usize>().unwrap_or(usize::MAX),
     }
 }
 
